@@ -1,5 +1,3 @@
-**Retail Sales Analysis**
-
 **Project Overview**
 1) This project aims to analyze a retail sales dataset to gain valuable insights that can help retail shop owners improve their sales performance.
 By leveraging data analysis techniques and visualization tools, we can identify trends, patterns, and opportunities to optimize inventory management,
