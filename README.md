@@ -11,7 +11,7 @@ marketing strategies, and overall business operations.
 3) Data Analysis: SQL Queries: PostgreSQL was used to execute SQL queries to extract relevant information from the dataset.
 4) Data Visualization: Power BI was employed to create interactive visualizations to explore the data and uncover insights.
 
-** Key Considered**
+**Key Considered**
 
 **1) Inventory Management**
 Optimize inventory levels to avoid stockouts and overstocking.
