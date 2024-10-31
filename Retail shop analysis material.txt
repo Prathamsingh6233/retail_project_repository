@@ -1,0 +1,228 @@
+--Display distinct Category and Sub_Category from the grocery_sales table.
+select distinct category from grocery_sales;
+select distinct sub_category from grocery_sales;
+
+--List all sales records made in the year 2018.
+select * from grocery_sales
+where order_date > '2017-12-31';
+
+--Retrieve the total number of orders placed in each City.
+select city,count(order_id) as total_ordrs
+from grocery_sales
+group by city
+order by total_ordrs desc;
+
+--Find the total sales amount from the grocery_sales table.
+select sum(sales)
+from grocery_sales;
+
+--Retrieve the total profit made in each Region.
+select region, sum(profit) Total_profit
+from grocery_sales
+group by region
+order by Total_profit desc;
+
+--List the top 5 customers who made the highest purchases in terms of Sales.
+select customer_name, sum(sales) Total_sales
+from grocery_sales 
+group by customer_name
+order by Total_sales
+limit 5;
+
+--Show records for orders that were placed in December of any year.
+select * from grocery_sales
+where extract(month from order_date) = 12;
+
+--Count the number of orders placed in each Statee.
+select statee, count(order_id) Total_orders
+from grocery_sales 
+group by statee
+order by Total_orders desc;
+
+--Calculate the total sales, profit, and discount by Category and Sub_Category.
+select category, sum(sales), sum(profit), sum(discount)
+from grocery_sales
+group by category;
+
+select sub_category, sum(sales), sum(profit), sum(discount)
+from grocery_sales
+group by sub_category;
+
+--Find the top 3 cities with the highest total sales.
+select city, sum(sales) Total_sales
+from grocery_sales
+group by city
+order by Total_sales desc
+limit 3;
+
+--List customers who have made more than 200 purchase.
+select customer_name, count(order_id) as Total_purchase
+from grocery_sales
+group by customer_name
+having count(order_id) > 200;
+
+--Retrieve the total sales and profit for each year (2015–2018).
+
+select tb1.Sales_2015, tb1.profit_2015, tb2.Sales_2018, tb2.profit_2018
+from 
+(select sum(sales) as Sales_2015, sum(profit) as profit_2015, 1 as x
+from grocery_sales
+where extract(year from order_date) = 2015) as tb1
+join
+(select sum(sales) as Sales_2018, sum(profit) as profit_2018, 1 as x
+from grocery_sales
+where extract(year from order_date) = 2018) as tb2
+on tb1.x=tb2.x;
+
+--Identify orders where the profit margin (Profit/Sales) is less than 5%.
+select order_id, round(profit/sales,3)
+from grocery_sales
+where round(profit/sales,3) < 0.05;
+
+--Calculate the average discount given per region.
+select region, round(avg(discount),2) as  avg_discount
+from grocery_sales 
+group by region
+order by avg_discount desc;
+
+--Find the month with the highest sales for each year.
+with xx as 
+(with x as 
+(select extract(year from order_date) as Year,
+extract(month from order_date) as Month, sum(sales) as Total_sales
+from grocery_sales
+group by year,month
+order by year,month asc)
+select x.*,
+row_number() over (partition by year order by x.Total_sales desc) as  rn
+from x)
+select xx.year as Sales_Year, xx.month as Sales_Month, xx.Total_sales as Total_Sales 
+from xx
+where xx.rn = 1
+
+--List the top 10 products (Sub_Category) that generated the highest profit.
+select Sub_category, sum(profit) as Total_Profit
+from grocery_sales
+group by Sub_category 
+order by Total_Profit desc
+limit 10;
+
+--Compare total sales and profit year over year (YoY) for each region.
+select s1.Year, s1.Region, s1.Total_sales, s1.Prev_y_Sales,
+round(((s1.total_sales - s1.prev_y_sales)/s1.prev_y_sales)*100,2) as Sales_YoY_Growth,
+s1.total_profit, s1.prev_y_profit,
+round(((s1.total_profit - s1.prev_y_profit)/s1.prev_y_profit)*100,2) as Profit_YoY_Growth
+from 
+(with x As (select extract(year from order_date) as Year,
+region, sum(sales) Total_sales, sum(profit) as total_profit
+from grocery_sales
+group by year, region
+order by  region, year asc)
+select x.*,
+lag(x.Total_sales) over (partition by region) as Prev_Y_sales,
+lag(x.Total_profit) over (partition by region) as Prev_Y_profit
+from x) as s1;
+
+
+-Identify the customer who generated the highest total profit over the entire time period.
+
+select customer_name, sum(profit) Total_Profit
+
+from grocery_sales group by customer_name
+
+order by Total_Profit desc
+
+Limit 1;
+
+-Calculate the cumulative sales and profit for each year, 
+showing the running total month by month. with x as (select extract(year from order_date) as year,
+
+extract (month from order_date) as month, sum(sales) as Total_sales
+
+from grocery_sales
+
+group by year, month
+
+order by year, month asc)
+
+select x...
+
+sum(x.Total sales) over (partition by year order by x.month asc
+range between unbounded preceding and current row) as cs from x;
+
+--Rank cities based on total sales, and display the rank for each city. with x as (select city, sum(sales) as Total_sales
+
+from grocery sales
+
+group by city)
+
+select x.city, row_number() over (order by x. Total sales desc) as Rank_by_sales
+
+from x;
+
+
+--Write a query to find the top 5 order with the maximum profit margin (Profit/Sales).
+select order_id, (sales - cost_price) as margin
+from grocery_sales
+order by margin desc
+limit 5;
+
+--Identify regions where total sales have increased every year from 2015 to 2018.
+select s1.region
+from 
+(with x As 
+(select extract(year from order_date) as Year,
+region, sum(sales) Total_sales
+from grocery_sales 
+group by year, region
+order by  region, year asc)
+select x.*, lag(Total_sales) over (partition by region ) as Prev_Y_sales,
+case when  x.Total_sales > lag(Total_sales) over (partition by region ) 
+or lag(Total_sales) over (partition by region ) is  null then 1
+else 2 end as Year_sales_status
+from x ) as s1
+group by s1.region
+having sum(s1.Year_sales_status) = 4;
+
+
+--Calculate the year-over-year growth rate in total sales for each category.
+select s1.*, 
+round(((s1.Total_sales_per_Y - s1.Prev_Y_sales)
+                  /
+s1.Prev_Y_sales)*100,2)||'%' as YoY_Growth
+from 
+(with x as 
+(select extract(year from order_date) as year,
+category, sum(sales) as Total_sales_per_Y
+from grocery_sales
+group by year, category
+order by category, year asc)
+select x.*,
+lag(x.Total_sales_per_Y) over (partition by category)
+as Prev_Y_sales
+from x) as s1;
+
+---Create a report showing the percentage contribution of each region to total sales.
+with x as 
+(select region,sum(sales) sales_by_region,
+(select sum(sales) from grocery_sales) as Total_sales
+from grocery_sales
+group by region
+order by Total_sales desc)
+select x.region, 
+round((x.sales_by_region/x.Total_sales)*100,2)||'%' as Sales_contribution
+from x
+order by Sales_contribution desc;
+
+
+--Identify the sub-categories where discounts are most frequently applied 
+--and analyze their impact on profit.
+select sub_category, count(discount), sum(discount)
+from grocery_sales
+where discount > 0
+group by sub_category;
+
+
+
+
+
